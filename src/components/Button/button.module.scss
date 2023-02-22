@@ -1,0 +1,18 @@
+.button {
+    margin: 30px auto;
+    padding: 14px;
+    color: #006c84;
+    background-color: #ffccbb;
+    border-radius: 8px;
+    font-size: 14px;
+    border: none;
+    box-shadow: 0 2px 6px 0 #006c84;
+    transition: transform 250ms ease-in-out, box-shadow 250ms ease-in-out;
+
+    &:hover,
+    &:focus {
+        cursor: pointer;
+        transform: scale(1.1);
+        box-shadow: none;
+    }
+}
