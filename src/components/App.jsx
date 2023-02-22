@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchImages } from "services/pixabay-api";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -12,98 +12,83 @@ import Button from './Button';
 import Modal from "./Modal";
 import ModalImage from "./ModalImage";
 
-export class App extends Component {
-  state = {
-    query: '',
-    items: [],
-    loading: false,
-    error: null,
-    page: 1,
-    openModal: false,
-    largeImage: null,
-  };
+export function App() {
+  const [query, setQuery] = useState("");
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [openModal, setOpenModal] = useState(false);
+  const [largeImage, setLargeImage] = useState(null);
 
-  componentDidUpdate(_, prevState) {
-    const { query, page } = this.state;
-    if (prevState.query !== query || prevState.page !== page) this.getImages();
-  }
+  useEffect(() => {
+    if (!query) return;
 
-  async getImages() {
-    try {
-      this.setState({ loading: true });
-      const { query, page } = this.state;
-      const { hits } = await fetchImages(query, page);
-      const countHits = hits.length;
+    async function getImages() {
+      try {
+        setLoading(true);
+        const { hits } = await fetchImages(query, page);
 
-      if (countHits === 0) {
-        toast.error(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
+        if (hits.length === 0) {
+          toast.error(
+            'Sorry, there are no images matching your search query. Please try again.'
+          );
+        }
+
+        setItems(prevItems => ([...prevItems, ...hits,]));
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
+    };
+    getImages();
+  }, [query, page, setItems, setError, setLoading]);
 
-      this.setState(prevState => ({
-        items: [...prevState.items, ...hits],
-      }));
-    } catch (error) {
-      this.setState({ error: error.message });
-    } finally {
-      this.setState({ loading: false });
-    }
-  }
 
-  searchImages = ({ query }) => {
-    this.setState({ query, items: [], page: 1 });
+  const searchImages = ({query}) => {
+    setQuery(query);
+    setItems([]);
+    setPage(1);
   };
 
-  showImage = ({ largeImageURL, tags }) => {
-    this.setState({
-      largeImage: { largeImageURL, tags },
-      openModal: true,
-    });
-    console.log(largeImageURL);
+  const showImage = (data) => {
+    setLargeImage(data);
+    setOpenModal(true);
   };
 
-  closeModal = () => {
-    this.setState({
-      openModal: false,
-      largeImage: null,
-    });
+  const closeModal = () => {
+    setLargeImage(null);
+    setOpenModal(false);
   };
 
-  loadMore = () => {
-    this.setState(({ page }) => ({ page: page + 1 }));
+  const loadMore = () => {
+    setPage(prevPage =>  prevPage + 1);
   };
 
-  render() {
-    const { searchImages, showImage, closeModal, loadMore } = this;
-    const { items, error, loading, openModal, largeImage } = this.state;
-
-    return (
-      <div className={css.app}>
-        <Searchbar onSubmit={searchImages} />
-        {items.length > 0 ? (
-          <ImageGallery>
-            <ImageGalleryItem data={items} showImage={showImage} />
-          </ImageGallery>
-        ) : (
-          <Message text={"Let's find wonderful images"} smile={'✨'} />
-        )}
-        {loading && <BarLoader color= '#006c84' className={css.loader} />}
-        {!(items.length < 12) && (
-          <Button onClick={loadMore} text={'Load more'} />
-        )}
-        {openModal && (
-          <Modal close={closeModal}>
-            <ModalImage {...largeImage} />
-          </Modal>
-        )}
-        {error && <Message text={error} smile={'❗'} />}
-        <ToastContainer
-          autoClose="3000"
-          theme="colored"
-          position="bottom-right"
-        />
-      </div>
-    );
-  }
+  return (
+    <div className={css.app}>
+      <Searchbar onSubmit={searchImages} />
+      {items.length > 0 ? (
+        <ImageGallery>
+          <ImageGalleryItem data={items} showImage={showImage} />
+        </ImageGallery>
+      ) : (
+        <Message text={"Let's find wonderful images"} smile={'✨'} />
+      )}
+      {loading && <BarLoader color="#006c84" className={css.loader} />}
+      {!(items.length < 12) && <Button onClick={loadMore} text={'Load more'} />}
+      {openModal && (
+        <Modal close={closeModal}>
+          <ModalImage {...largeImage} />
+        </Modal>
+      )}
+      {error && <Message text={error} smile={'❗'} />}
+      <ToastContainer
+        autoClose="3000"
+        theme="colored"
+        position="bottom-right"
+      />
+    </div>
+  );
 }
