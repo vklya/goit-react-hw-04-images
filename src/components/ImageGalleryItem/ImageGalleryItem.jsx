@@ -10,8 +10,12 @@ const ImageGalleryItem = ({ data, showImage }) => {
 };
 
 ImageGalleryItem.propTypes = {
-    data: PropTypes.arrayOf(PropTypes.object).isRequired,
-    showImage: PropTypes.func.isRequired,
+  data: PropTypes.arrayOf(PropTypes.object).isRequired,
+  showImage: PropTypes.func.isRequired,
+  id: PropTypes.string,
+  tags: PropTypes.string.isRequired,
+  webformatURL: PropTypes.string,
+  largeImageURL: PropTypes.string,
 };
 
 export default ImageGalleryItem;
